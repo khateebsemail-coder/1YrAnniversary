@@ -133,12 +133,12 @@ body.gated #p1 .names,body.gated #p1 h1,body.gated #p1 .date,body.gated #p1 .tap
 @keyframes shine{0%,100%{opacity:.25;scale:.5}50%{opacity:1;scale:1.6}}
 .sht{position:absolute;left:-10%;width:120px;height:1.5px;background:linear-gradient(90deg,transparent,#fff);rotate:18deg;opacity:0;animation:sht 8s ease-in infinite}
 @keyframes sht{0%{translate:0 0;opacity:0}3%{opacity:1}14%{translate:130vw 42vw;opacity:0}100%{translate:130vw 42vw;opacity:0}}
-.gq{position:relative;z-index:2;width:min(92vw,560px);padding:0 10px;text-align:center;color:#fff;transition:opacity .35s}
-.gq::before{content:"";position:absolute;inset:-70px -40px;background:radial-gradient(closest-side,rgba(0,0,0,.88) 45%,transparent);z-index:-1}
-.gs{font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:#d5d9ea;margin-bottom:14px;min-height:1em}
-.gt{font-size:clamp(30px,8.5vw,50px);line-height:1.25;text-shadow:0 0 22px #000,0 2px 3px #000}
-.gbs{margin-top:34px;min-height:56px}
-.gb{font:inherit;font-size:17px;letter-spacing:.22em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.6);border:1px solid #fff;border-radius:40px;padding:13px 30px;margin:6px 8px;cursor:pointer;transition:background .25s,color .25s,transform .2s}
+.gq{position:relative;z-index:2;width:min(86vw,480px);padding:0 10px;text-align:center;color:#fff;transition:opacity .35s}
+.gq::before{content:"";position:absolute;inset:-90px -40px -120px;background:radial-gradient(closest-side,rgba(0,0,0,.88) 45%,transparent);z-index:-1}
+.gs{position:absolute;left:0;right:0;bottom:100%;margin-bottom:14px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#d5d9ea}
+.gt{font-size:clamp(22px,6.2vw,34px);line-height:1.3;text-wrap:balance;text-shadow:0 0 22px #000,0 2px 3px #000}
+.gbs{position:absolute;left:0;right:0;top:100%;margin-top:26px}
+.gb{font:inherit;font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.6);border:1px solid #fff;border-radius:40px;padding:11px 24px;margin:6px 6px;cursor:pointer;transition:background .25s,color .25s,transform .2s}
 .gb:hover,.gb:active{background:#fff;color:#000;transform:scale(1.06)}
 .gq.in .gt,.gq.in .gs,.gq.in .gb{animation:gin .7s cubic-bezier(.2,.8,.2,1) both}
 .gq.in .gb{animation-delay:.3s}
@@ -578,17 +578,27 @@ var AUD=(function(){
 
  // song ducks while a video with sound is playing, then comes back
  function audible(){return vids().some(function(v){return !v.paused&&!v.muted})}
+ var liftAt=0;
+ function lift(t,force){ // song back up; play() also restarts it if the phone paused it while a video had the sound
+  if(scene!=='story'||!begun)return;
+  if(!force&&audible())return;
+  var now=Date.now();
+  if(now<liftAt&&!E.song.paused)return;
+  liftAt=now+(t||2)*1000;
+  if(ctx&&ctx.state!=='running'){try{var r=ctx.resume();if(r&&r.catch)r.catch(function(){})}catch(x){}}
+  play(E.song,LV.song,t||2);
+ }
  function refresh(){
   if(scene!=='story'||!begun)return;
   clearTimeout(liftT);
   if(audible())set(E.song,LV.duck,.6);
-  else liftT=setTimeout(function(){if(!audible())set(E.song,LV.song,2.2)},700);
+  else liftT=setTimeout(function(){lift(2.2)},700);
  }
  // the videos are over (scrolled past them): fade their sound away, song comes back up
  function pastVideos(){
   var any=false;
-  vids().forEach(function(v){if(!v.paused){any=true;set(v,0,1.4);setTimeout(function(){v.pause();set(v,1,.03)},1500)}});
-  if(any&&scene==='story'){clearTimeout(liftT);set(E.song,LV.song,2.4)}
+  vids().forEach(function(v){if(!v.paused&&!v._fading){any=true;v._fading=true;set(v,0,1.4);setTimeout(function(){v.pause();set(v,1,.03);v._fading=false},1500)}});
+  if(any&&scene==='story'){clearTimeout(liftT);lift(2.4,true)}
  }
  vids().forEach(function(v){['play','pause','volumechange'].forEach(function(ev){v.addEventListener(ev,refresh)})});
  var ask=document.getElementById('ask');
@@ -598,7 +608,9 @@ var AUD=(function(){
  }
  var P3=document.getElementById('p3'),col=document.querySelector('.collage'),q=false;
  P3.addEventListener('scroll',function(){if(q)return;q=true;requestAnimationFrame(function(){q=false;
-  if(col.getBoundingClientRect().bottom<innerHeight*.3&&vids().some(function(v){return !v.paused}))pastVideos();askFx()})},{passive:true});
+  var cr=col.getBoundingClientRect(),away=cr.bottom<innerHeight*.3||cr.top>innerHeight*.9;
+  if(away){if(vids().some(function(v){return !v.paused}))pastVideos();else lift(1.8)}
+  askFx()})},{passive:true});
 
  return {
   scene:function(s){scene=s;if(s!=='story')fx(false);apply()},
