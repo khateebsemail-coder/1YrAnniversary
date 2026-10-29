@@ -253,6 +253,12 @@ body.shake{animation:shake .6s}
 .mat{background:#f8f4ec;padding:18px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),inset 0 3px 9px rgba(0,0,0,.2)}
 .mat img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;box-shadow:0 0 0 1px rgba(0,0,0,.3),0 1px 6px rgba(0,0,0,.25)}
 .bt{margin-top:44px;width:100%;text-align:left;font-size:clamp(15px,4vw,17px);line-height:1.75}
+/* phone: only vertical scrolling, never sideways */
+html,body{overflow:hidden;max-width:100%;overscroll-behavior:none;touch-action:pan-y;-webkit-text-size-adjust:100%}
+body{position:fixed;inset:0;width:100%}
+.page{max-width:100vw}
+#p1{overflow:hidden}
+#p2,#p3{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y}
 </style>
 </head>
 <body class="gated">
